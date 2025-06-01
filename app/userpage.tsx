@@ -1,10 +1,13 @@
 import { CustomAlert } from "@/src/components/CustomAlert";
 import { FormInput } from "@/src/components/FormInput";
 import { useDeck } from "@/src/hooks/useDeck";
-import React, { useState } from "react";
+import { styles } from "@/src/screens/UserPage.styles";
+import Icon from "@expo/vector-icons/MaterialCommunityIcons";
+import React, { useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   Keyboard,
-  StyleSheet,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -14,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UserPage() {
   const { deck, setDeck, createDeck } = useDeck();
+
   const [alert, setAlert] = useState({
     visible: false,
     type: "success",
@@ -21,7 +25,31 @@ export default function UserPage() {
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isShowButtonAI, setIsShowButtonAI] = useState(true);
+
   const nameDeck = deck.nameDeck;
+  const contextoDeck = deck.contexto;
+
+
+  const contextAnim = useRef(new Animated.Value(0)).current;
+
+  const toggleButtonAI = () => {
+    const toValue = isShowButtonAI ? 1 : 0;
+
+    Animated.timing(contextAnim, {
+      toValue,
+      duration: 300,
+      useNativeDriver: false,
+      easing: Easing.out(Easing.ease),
+    }).start();
+
+    setIsShowButtonAI((prev) => !prev);
+  };
+
+  const contextHeight = contextAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 300],
+  });
 
   const handleCreateDeck = () => {
     if (createDeck()) {
@@ -30,13 +58,14 @@ export default function UserPage() {
         type: "success",
         message: "Deck criado com sucesso!",
       });
-    } else {
-      setAlert({
-        visible: true,
-        type: "error",
-        message: "Algo deu errado. Tente novamente!",
-      });
+      return;
     }
+
+    setAlert({
+      visible: true,
+      type: "error",
+      message: "Algo deu errado. Tente novamente!",
+    });
   };
 
   const dismissEditing = () => {
@@ -56,7 +85,9 @@ export default function UserPage() {
                 <FormInput
                   placeholder="Digite o nome do deck"
                   value={nameDeck}
-                  onChangeText={(text) => setDeck({ nameDeck: text })}
+                  onChangeText={(text) =>
+                    setDeck((prev) => ({ ...prev, nameDeck: text }))
+                  }
                   autoFocus
                   onBlur={() => setIsEditing(false)}
                 />
@@ -68,11 +99,51 @@ export default function UserPage() {
                 </TouchableOpacity>
               )}
             </View>
+
+            {isShowButtonAI && (
+              <TouchableOpacity
+                style={styles.buttonIconContainer}
+                onPress={toggleButtonAI}
+              >
+                <Text style={styles.buttonIconText}>Usar IA</Text>
+                <Icon name="brain" size={24} color="#333" style={styles.icon} />
+              </TouchableOpacity>
+            )}
+
+            <Animated.View
+              style={{
+                height: contextHeight,
+                overflow: "hidden",
+              }}
+            >
+              {!isShowButtonAI && (
+                <View>
+                  <View style={styles.buttonAIContainer}>
+                    <Text style={styles.title}>Contexto</Text>
+                    <TouchableOpacity onPress={toggleButtonAI}>
+                      <Icon name="chevron-up" size={24} color="#000" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <FormInput
+                    placeholder="Digite o contexto do deck"
+                    value={contextoDeck}
+                    onChangeText={(text) =>
+                      setDeck((prev) => ({ ...prev, contexto: text }))
+                    }
+                    multiline
+                    style={styles.textArea}
+                  />
+                </View>
+              )}
+            </Animated.View>
           </View>
 
-          <TouchableOpacity style={styles.button} onPress={handleCreateDeck}>
-            <Text style={styles.buttonText}>Criar Deck</Text>
-          </TouchableOpacity>
+          <View>
+            <TouchableOpacity style={styles.button} onPress={handleCreateDeck}>
+              <Text style={styles.buttonText}>Criar Deck</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <CustomAlert
@@ -85,46 +156,3 @@ export default function UserPage() {
     </TouchableWithoutFeedback>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: "#f9f9f9",
-  },
-  inner: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-  card: {
-    marginBottom: 24,
-    padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  deckName: {
-    fontSize: 18,
-    color: "#555",
-  },
-  button: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-});
