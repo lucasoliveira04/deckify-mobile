@@ -1,10 +1,32 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Alert, Button, Text, TextInput, View } from "react-native";
 
-export function Home() {
-  const [deckData, setDeclName] = useState({
+export default function Home() {
+  const router = useRouter();
+
+  const [deckData, setDeckName] = useState({
     nameDeck: "",
   });
+
+  const handleCreateDeck = () => {
+    const name = deckData.nameDeck.trim();
+
+    if (name.length < 3) {
+      Alert.alert("Erro", "O nome deve ter pelo menos 3 caracteres.");
+      return;
+    }
+
+    if (name.length > 20) {
+      Alert.alert("Erro", "O nome deve ter no máximo 20 caracteres.");
+      return;
+    }
+
+    Alert.alert("Sucesso", `Deck "${name}" criado com sucesso!`);
+    setDeckName({ nameDeck: "" });
+
+    router.push("/userpage");
+  };
 
   return (
     <View style={styles.container}>
@@ -20,10 +42,15 @@ export function Home() {
         <Text style={styles.label}>Nome</Text>
         <TextInput
           style={styles.input}
-          placeholder="Digite seu nome"
+          placeholder="Digite o nome do deck"
           placeholderTextColor="#999"
-          onChangeText={(text) => setDeclName({ ...deckData, nameDeck: text })}
+          value={deckData.nameDeck}
+          onChangeText={(text) => setDeckName({ ...deckData, nameDeck: text })}
         />
+      </View>
+
+      <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+        <Button title="Criar Deck" onPress={handleCreateDeck} />
       </View>
     </View>
   );
@@ -36,10 +63,9 @@ const styles = {
   },
   header: {
     height: 60,
-    width: "100%",
     backgroundColor: "#90ee90",
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "center" as "center",
+    alignItems: "center" as "center",
     elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -48,8 +74,18 @@ const styles = {
   },
   headerText: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: "bold" as "bold",
     color: "#fff",
+  },
+  deckNameContainer: {
+    alignItems: "center" as "center",
+    justifyContent: "center" as "center",
+  },
+  deckName: {
+    fontSize: 16,
+    fontWeight: "bold" as "bold",
+    color: "#000",
+    paddingVertical: 12,
   },
   form: {
     padding: 16,
@@ -67,15 +103,5 @@ const styles = {
     paddingHorizontal: 8,
     fontSize: 16,
     color: "#000",
-  },
-  deckName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#000",
-    paddingVertical: 12,
-  },
-  deckNameContainer: {
-    alignItems: "center",
-    justifyContent: "center",
   },
 };
