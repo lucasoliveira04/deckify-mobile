@@ -2,6 +2,7 @@ import { CustomAlert } from "@/src/components/CustomAlert";
 import { FormInput } from "@/src/components/FormInput";
 import { useDeck } from "@/src/hooks/useDeck";
 import { styles } from "@/src/screens/UserPage.styles";
+import generateFlashcards from "@/src/services/api/generate-flashcards";
 import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 import React, { useRef, useState } from "react";
 import {
@@ -30,7 +31,6 @@ export default function UserPage() {
   const nameDeck = deck.nameDeck;
   const contextoDeck = deck.contexto;
 
-
   const contextAnim = useRef(new Animated.Value(0)).current;
 
   const toggleButtonAI = () => {
@@ -51,13 +51,27 @@ export default function UserPage() {
     outputRange: [0, 300],
   });
 
-  const handleCreateDeck = () => {
+  const handleCreateDeck = async () => {
     if (createDeck()) {
-      setAlert({
-        visible: true,
-        type: "success",
-        message: "Deck criado com sucesso!",
-      });
+      try {
+        setAlert({
+          visible: true,
+          type: "success",
+          message: "Deck criado com sucesso!",
+        });
+
+        console.log("Deck criado:", deck);
+
+        await generateFlashcards({
+          context: deck.contexto,
+          quantityTasks: 5,
+        });
+
+        console.log("Flashcards gerados com sucesso!");
+      } catch (error) {
+        console.error("Erro ao gerar flashcards:", error);
+      }
+
       return;
     }
 
